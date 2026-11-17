@@ -196,3 +196,8 @@ em.warn { font-style: normal; color: #d97706; }
 
 .btn.wide { width: 100%; margin: 6px 0 4px; }
 .idea-chips { padding: 0; margin-bottom: 10px; }
+
+.kemoji { display: inline-grid; place-items: center; background: color-mix(in srgb, var(--c) 22%, var(--card)); }
+.thumb .kemoji.kimg { width: 46px; height: 46px; border-radius: 11px; font-size: 24px; }
+.kemoji.kimg-s { font-size: 12px; }
+.kemoji.kpin { width: 28px; height: 28px; border-radius: 7px; font-size: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.45); }

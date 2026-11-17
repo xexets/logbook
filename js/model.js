@@ -8,6 +8,7 @@ export const KINDS = {
   mountaineering: { label: "Mountaineering", color: "#5b5bd6", icon: "🏔️" },
   winterMountaineering: { label: "Winter mountaineering", color: "#1aa3c9", icon: "❄️" },
   sportClimb: { label: "Sport climbing", color: "#e5484d", icon: "🧗" },
+  tradClimb: { label: "Trad climbing", color: "#d97706", icon: "🪢", noImg: true },
   multipitch: { label: "Multipitch", color: "#e54d8f", icon: "⛰️" },
   alpineClimb: { label: "Alpine climb", color: "#9d4edd", icon: "🔺" },
   winterClimb: { label: "Winter climb", color: "#3b82f6", icon: "🧊" },
@@ -23,11 +24,13 @@ export const KINDS = {
 };
 export const kindOf = (k) => KINDS[k] || KINDS.other;
 /** Custom icon shared with the Mac app. */
-export const kindImg = (k, cls = "kimg") => `<img class="${cls}" src="icons/kinds/${KINDS[k] ? k : "other"}.png" alt="">`;
-export const isClimbing = (k) => ["sportClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
-export const isCragDay = (k) => k === "sportClimb" || k === "bouldering" || k === "climbingGym";
+export const kindImg = (k, cls = "kimg") => KINDS[k]?.noImg
+  ? `<span class="${cls} kemoji" style="--c:${KINDS[k].color}">${KINDS[k].icon}</span>`
+  : `<img class="${cls}" src="icons/kinds/${KINDS[k] ? k : "other"}.png" alt="">`;
+export const isClimbing = (k) => ["sportClimb", "tradClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
+export const isCragDay = (k) => k === "sportClimb" || k === "tradClimb" || k === "bouldering" || k === "climbingGym";
 export const hasGrade = (k) =>
-  ["ferrata", "sportClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering",
+  ["ferrata", "sportClimb", "tradClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering",
    "climbingGym", "mountaineering", "winterMountaineering", "scramble"].includes(k);
 
 export const STYLES = {

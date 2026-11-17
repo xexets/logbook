@@ -221,7 +221,9 @@ function makeMap(el) {
   return m;
 }
 
-const kindIcon = (k) => L.icon({ iconUrl: `icons/kinds/${KINDS[k] ? k : "other"}.png`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -12], className: "kmarker" });
+const kindIcon = (k) => KINDS[k]?.noImg
+  ? L.divIcon({ html: `<span class="kemoji kpin" style="--c:${KINDS[k].color}">${KINDS[k].icon}</span>`, iconSize: [28, 28], iconAnchor: [14, 14], className: "" })
+  : L.icon({ iconUrl: `icons/kinds/${KINDS[k] ? k : "other"}.png`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -12], className: "kmarker" });
 
 const tracks = new Map();
 async function loadTrack(path) {
