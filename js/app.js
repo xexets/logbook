@@ -538,6 +538,7 @@ function records(list) {
   hardestGrade("Hardest alpine climb", ["alpineClimb", "winterClimb"]);
   hardestGrade("Hardest via ferrata", ["ferrata"]);
   const f = (k, fmt) => (m) => fmt(m[1]);
+  list = list.filter((a) => a.kind !== "other");   // no ski days, road trips, boat trips in records
   best("Longest distance", list.filter((a) => a.distanceKm != null).map((a) => [a, a.distanceKm]), f(0, fmtKm));
   best("Biggest height gain", list.filter((a) => a.elevationGainM != null).map((a) => [a, a.elevationGainM]), f(0, fmtM));
   best("Longest day", list.filter((a) => a.durationMinutes != null).map((a) => [a, a.durationMinutes]), f(0, fmtDur));
