@@ -1,5 +1,5 @@
 import {
-  KINDS, kindOf, kindImg, isCragDay, isClimbing, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
+  KINDS, kindOf, kindImg, isCragDay, isClimbing, hasPitches, PITCH_STYLES, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
   fmtKm, fmtM, fmtDur, fmtDate, summary, gradeScore, gradeLabel, topGrade, parseRoutes, esc, uuid,
 } from "./model.js";
 import { parseGPX, gpxStats, profile, latlngs } from "./gpx.js";
@@ -189,8 +189,8 @@ async function openRecord(id) {
       ${a.gpxFile || a.latitude != null ? `<div class="map" id="rec-map"></div>` : ""}
       ${a.gpxFile ? `<div class="profile"><canvas id="rec-prof"></canvas></div>
         <div class="row gpx"><span>〰︎ ${esc(a.gpxFile.split("/").pop())}</span><button class="btn small" id="dl">Download GPX</button></div>` : ""}
-      ${a.routes?.length ? `<h3>Routes</h3><table class="routes">${a.routes.map((r) =>
-        `<tr><td><b>${esc(r.grade)}</b></td><td>${esc(r.name || "—")}</td><td class="${["onsight", "flash", "redpoint"].includes(r.style) ? "" : "dim"}">${esc(STYLES[r.style] || r.style)}</td></tr>`).join("")}</table>` : ""}
+      ${a.routes?.length ? `<h3>${hasPitches(a.kind) ? "Pitches" : "Routes"}</h3><table class="routes">${a.routes.map((r, i) =>
+        `<tr>${hasPitches(a.kind) ? `<td class="dim">P${i + 1}</td>` : ""}<td><b>${esc(r.grade || "–")}</b></td><td>${esc(r.name || "—")}</td><td class="${["onsight", "flash", "redpoint"].includes(r.style) ? "" : "dim"}">${esc((hasPitches(a.kind) ? PITCH_STYLES : STYLES)[r.style] || r.style)}</td></tr>`).join("")}</table>` : ""}
       ${a.partners ? `<p><small class="dim">Partners</small><br>${esc(a.partners)}</p>` : ""}
       ${a.notes ? `<div class="notes">${linkify(a.notes)}</div>` : ""}
       ${a.photos?.length ? `<div class="grid">${a.photos.map((p) => `<button class="ph" data-photo="${esc(p)}"><img data-thumb="${esc(p)}" alt=""></button>`).join("")}</div>` : ""}
@@ -340,7 +340,11 @@ function renderEditor(isNew) {
             <label>Minutes<input name="m" inputmode="numeric" value="${dur != null ? Math.round(dur % 60) : ""}"></label>
             ${hasGrade(a.kind) ? `<label>Grade<input name="grade" value="${esc(a.grade)}" placeholder="${a.kind === "ferrata" ? "C/D" : "AD+ / 6a"}"></label>` : ""}
           </div>
-        </fieldset>`}
+        </fieldset>
+        ${hasPitches(a.kind) ? `<fieldset><legend>Pitches</legend>
+          <div id="routes" class="pitches">${(a.routes || []).map((r, i) => routeRow(r, i, true)).join("")}</div>
+          <button class="btn small" data-addroute>+ Add pitch</button>
+        </fieldset>` : ""}`}
       <label>Partners<input name="partners" value="${esc(a.partners)}"></label>
       <label>Notes<textarea name="notes" rows="6">${esc(a.notes)}</textarea></label>
       <fieldset><legend>Photos</legend>
@@ -354,9 +358,9 @@ function renderEditor(isNew) {
   bindEditor(isNew);
 }
 
-const routeRow = (r) => `<div class="route" data-id="${r.id}">
-  <input class="g" value="${esc(r.grade)}" placeholder="6a"><input class="n" value="${esc(r.name)}" placeholder="Route">
-  <select class="s">${Object.entries(STYLES).map(([k, v]) => opt(k, v, r.style)).join("")}</select>
+const routeRow = (r, i = 0, pitch = false) => `<div class="route${pitch ? " pitch" : ""}" data-id="${r.id}">
+  ${pitch ? `<span class="pn">P${i + 1}</span>` : ""}<input class="g" value="${esc(r.grade)}" placeholder="${pitch ? "5b" : "6a"}"><input class="n" value="${esc(r.name)}" placeholder="${pitch ? "Pitch notes" : "Route"}">
+  <select class="s">${Object.entries(pitch ? PITCH_STYLES : STYLES).map(([k, v]) => opt(k, v, r.style)).join("")}</select>
   <button class="x" aria-label="Remove">✕</button></div>`;
 
 function photoTile(p, a) {
@@ -388,7 +392,7 @@ function readForm() {
   if (sheet.querySelector("#routes")) {
     a.routes = [...sheet.querySelectorAll(".route")].map((r) => ({
       id: r.dataset.id, grade: $(".g", r).value.trim(), name: $(".n", r).value.trim(), style: $(".s", r).value,
-    })).filter((r) => r.grade || r.name);
+    })).filter((r) => hasPitches(a.kind) || r.grade || r.name);
   }
 }
 

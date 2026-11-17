@@ -247,3 +247,6 @@ em.warn { font-style: normal; color: #d97706; }
   .chart { display: inline-flex; vertical-align: top; width: calc(50% - 26px); margin: 10px 0 10px 16px; height: 320px; }
   #toast { bottom: 20px; left: calc(50% + var(--side) / 2); }
 }
+
+.route.pitch { grid-template-columns: 28px 52px 1fr 128px 30px; }
+.route .pn { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }

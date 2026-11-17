@@ -27,6 +27,8 @@ export const kindImg = (k, cls = "kimg") => KINDS[k]?.noImg
   ? `<span class="${cls} kemoji" style="--c:${KINDS[k].color}">${KINDS[k].icon}</span>`
   : `<img class="${cls}" src="icons/kinds/${KINDS[k] ? k : "other"}.png" alt="">`;
 export const isClimbing = (k) => ["sportClimb", "tradClimb", "multipitch", "mountaineering", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
+export const hasPitches = (k) => k === "multipitch" || k === "mountaineering";
+export const PITCH_STYLES = { redpoint: "Led", onsight: "Led onsight", flash: "Led (flash)", second: "Seconded", attempt: "Rests / falls / aid", toprope: "Top rope" };
 export const isCragDay = (k) => k === "sportClimb" || k === "tradClimb" || k === "bouldering" || k === "climbingGym";
 export const hasGrade = (k) =>
   ["ferrata", "sportClimb", "tradClimb", "multipitch", "winterClimb", "iceClimb", "bouldering",
@@ -80,6 +82,7 @@ export function summary(a) {
     if (a.elevationGainM != null) p.push("↑" + fmtM(a.elevationGainM));
     if (a.durationMinutes != null) p.push(fmtDur(a.durationMinutes));
     if (a.grade) p.push(a.grade);
+    if (hasPitches(a.kind) && a.routes?.length) p.push(`${a.routes.length} pitch${a.routes.length === 1 ? "" : "es"}`);
   }
   return p.join(" · ");
 }
