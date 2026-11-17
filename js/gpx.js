@@ -20,23 +20,30 @@ function hav(a, b) {
   return 2 * R * Math.asin(Math.sqrt(x));
 }
 
-export function gpxStats(track) {
+/** Stats for the human-powered part only: stretches faster than limitKmh (or GPS jumps
+ *  over 1 km without timestamps) count as driving/lifts and are skipped. */
+export function gpxStats(track, limitKmh = 25) {
   const p = track.points;
   if (p.length < 2) return null;
-  let dist = 0;
-  for (let i = 1; i < p.length; i++) dist += hav(p[i - 1], p[i]);
-  const eles = p.map((x) => x.ele).filter((x) => x != null && !Number.isNaN(x));
-  let gain = null;
-  if (eles.length) {
-    let ref = eles[0]; gain = 0;
-    for (const e of eles.slice(1)) { if (e - ref > 4) { gain += e - ref; ref = e; } else if (e < ref) ref = e; }
+  let dist = 0, gain = 0, dur = 0, ref = null;
+  for (let i = 1; i < p.length; i++) {
+    const a = p[i - 1], b = p[i], d = hav(a, b);
+    const dt = a.time && b.time && !isNaN(a.time) && !isNaN(b.time) ? (b.time - a.time) / 1000 : null;
+    const ok = dt && dt > 0 ? (d / dt) * 3.6 <= limitKmh : d <= 1000;
+    if (!ok) { ref = null; continue; }
+    dist += d;
+    if (dt && dt > 0) dur += dt;
+    if (b.ele != null && !isNaN(b.ele)) {
+      if (ref == null) ref = a.ele != null && !isNaN(a.ele) ? a.ele : b.ele;
+      if (b.ele - ref > 4) { gain += b.ele - ref; ref = b.ele; } else if (b.ele < ref) ref = b.ele;
+    }
   }
+  const eles = p.map((x) => x.ele).filter((x) => x != null && !Number.isNaN(x));
   const times = p.map((x) => x.time).filter((t) => t && !Number.isNaN(t.getTime()));
-  const dur = times.length > 1 && times.at(-1) > times[0] ? (times.at(-1) - times[0]) / 60000 : null;
   return {
     distanceKm: Math.round(dist / 10) / 100,
-    elevationGainM: gain != null ? Math.round(gain) : null,
-    durationMinutes: dur != null ? Math.round(dur) : null,
+    elevationGainM: eles.length ? Math.round(gain) : null,
+    durationMinutes: dur > 0 ? Math.round(dur / 60) : null,
     maxAltitudeM: eles.length ? Math.round(Math.max(...eles)) : null,
     start: p[0], startTime: times[0] || null,
   };

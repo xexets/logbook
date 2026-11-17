@@ -389,7 +389,8 @@ async function importGPX(file, isNew) {
   if (!file) return;
   readForm();
   const text = await file.text();
-  const t = parseGPX(text), st = gpxStats(t);
+  const t = parseGPX(text), st = gpxStats(t, draft.kind === "bike" ? 70 : 25);
+  if (st && draft.kind === "kayak") st.elevationGainM = null;
   if (!st) { $("#gpx-note", sheet).textContent = "Couldn't find a track in that file."; return; }
   const day = new Date(draft.date).toISOString().slice(0, 10);
   const name = file.name.toLowerCase().endsWith(".gpx") ? file.name : file.name + ".gpx";
