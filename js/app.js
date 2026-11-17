@@ -175,7 +175,7 @@ async function openRecord(id) {
   const facts = [
     ["Distance", a.distanceKm != null && fmtKm(a.distanceKm)], ["Height gain", a.elevationGainM != null && fmtM(a.elevationGainM)],
     ["Duration", a.durationMinutes != null && fmtDur(a.durationMinutes)], ["Highest point", a.maxAltitudeM != null && fmtM(a.maxAltitudeM)],
-    ["Grade", isCragDay(a.kind) ? topGrade(a)?.label : a.grade], ["Routes", a.routes?.length ? a.routes.length : ""],
+    ["Grade", isCragDay(a.kind) ? topGrade(a)?.label : a.grade], [hasPitches(a.kind) ? "Pitches" : "Routes", a.routes?.length ? a.routes.length : ""],
   ].filter(([, v]) => v);
   openSheet(`
     <div class="sheet-bar"><button class="link" data-back>‹ Back</button><a class="link" href="#/edit/${a.id}">Edit</a></div>
