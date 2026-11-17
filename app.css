@@ -174,3 +174,9 @@ dialog.viewer .full { position: absolute; bottom: calc(20px + var(--safe-b)); le
 .review span { font-size: 14px; }
 .review .row { justify-content: flex-end; } .review .row > * { flex: none; }
 em.warn { font-style: normal; color: #d97706; }
+
+.txt small.sum { display: none; }
+@media (max-width: 560px) {
+  .item .meta { display: none; }
+  .txt small.sum { display: block; color: var(--ink); opacity: .75; }
+}

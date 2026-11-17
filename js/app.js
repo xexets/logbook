@@ -72,6 +72,8 @@ function cleanup() { charts.forEach((c) => c.destroy()); charts = []; maps.forEa
 
 function renderTab(tab) {
   cleanup();
+  if (renderTab.last !== tab) window.scrollTo(0, 0);
+  renderTab.last = tab;
   ({ log: renderLog, map: renderMap, stats: renderStats, ideas: renderIdeas }[tab])();
   $("#add").onclick = () => go(tab === "ideas" ? "#/idea/new" : "#/edit/new");
 }
@@ -130,18 +132,19 @@ function row(a) {
   const c = coverOf(a);
   return `<li><a href="#/a/${a.id}" class="item">
     ${c ? `<span class="thumb"><img data-thumb="${esc(c)}" alt="">${badge(a.kind)}</span>` : `<span class="thumb icon" style="--c:${kindOf(a.kind).color}">${kindOf(a.kind).icon}</span>`}
-    <span class="txt"><b>${esc(titleOf(a))}</b><small>${esc([fmtDate(a.date), placeLine(a)].filter(Boolean).join(" · "))}</small></span>
+    <span class="txt"><b>${esc(titleOf(a))}</b><small>${esc([fmtDate(a.date), placeLine(a)].filter(Boolean).join(" · "))}</small><small class="sum">${a.review ? '<em class="warn">⚠︎</em> ' : ""}${esc(summary(a))}</small></span>
     <span class="meta">${a.review ? '<em class="warn">⚠︎</em> ' : ""}${esc(summary(a))}${a.gpxFile ? " <i>〰︎</i>" : ""}</span></a></li>`;
 }
 
 // ------------------------------------------------------------------ RECORD
 function openSheet(html) {
+  maps = maps.filter((m) => { if (sheet.contains(m.getContainer())) { m.remove(); return false; } return true; });
   sheet.innerHTML = html;
   if (!sheet.open) sheet.showModal();
   sheet.scrollTop = 0;
 }
 function closeSheet(nav = true) {
-  sheet.querySelectorAll("[data-map]").forEach(() => {});
+  maps = maps.filter((m) => { if (sheet.contains(m.getContainer())) { m.remove(); return false; } return true; });
   if (sheet.open) sheet.close();
   sheet.innerHTML = "";
   if (nav) back();
@@ -228,9 +231,9 @@ async function drawRecordMap(a) {
   if (a.latitude != null) m.setView([a.latitude, a.longitude], 12);
   if (!a.gpxFile) { L.circleMarker([a.latitude, a.longitude], { radius: 8, color: "#fff", weight: 2, fillColor: kindOf(a.kind).color, fillOpacity: 1 }).addTo(m); return; }
   const t = await loadTrack(a.gpxFile);
-  if (!t || !t.points.length) return;
+  if (!t || !t.points.length || !document.contains(el)) return;
   const line = L.polyline(latlngs(t), { color: kindOf(a.kind).color, weight: 4 }).addTo(m);
-  m.fitBounds(line.getBounds(), { padding: [20, 20] });
+  m.fitBounds(line.getBounds(), { padding: [20, 20], animate: false });
   const prof = profile(t);
   if (prof.length > 1 && $("#rec-prof", sheet)) {
     const col = kindOf(a.kind).color;
