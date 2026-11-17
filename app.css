@@ -189,3 +189,7 @@ em.warn { font-style: normal; color: #d97706; }
 .txt .mk { font-size: 11px; opacity: .8; margin-left: 2px; }
 .item .meta { display: none; }
 .txt small.sum { display: none !important; }
+
+.thumb .kimg { width: 46px; height: 46px; border-radius: 11px; display: block; opacity: 1; }
+.kimg-s { width: 18px; height: 18px; border-radius: 4px; vertical-align: -3px; margin-right: 4px; }
+.kmarker { border-radius: 7px; box-shadow: 0 1px 4px rgba(0,0,0,.45); }

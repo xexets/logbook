@@ -22,6 +22,8 @@ export const KINDS = {
   other: { label: "Other", color: "#6b7280", icon: "⭐" },
 };
 export const kindOf = (k) => KINDS[k] || KINDS.other;
+/** Custom icon shared with the Mac app. */
+export const kindImg = (k, cls = "kimg") => `<img class="${cls}" src="icons/kinds/${KINDS[k] ? k : "other"}.png" alt="">`;
 export const isClimbing = (k) => ["sportClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
 export const isCragDay = (k) => k === "sportClimb" || k === "bouldering" || k === "climbingGym";
 export const hasGrade = (k) =>

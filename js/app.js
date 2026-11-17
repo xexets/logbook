@@ -1,5 +1,5 @@
 import {
-  KINDS, kindOf, isCragDay, isClimbing, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
+  KINDS, kindOf, kindImg, isCragDay, isClimbing, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
   fmtKm, fmtM, fmtDur, fmtDate, summary, gradeScore, gradeLabel, topGrade, parseRoutes, esc, uuid,
 } from "./model.js";
 import { parseGPX, gpxStats, profile, latlngs } from "./gpx.js";
@@ -133,7 +133,7 @@ function row(a) {
   const marks = (n ? ` <span class="mk">📷${n > 1 ? n : ""}</span>` : "") + (a.gpxFile ? ' <span class="mk">〰︎</span>' : "") + (a.review ? ' <em class="warn">⚠︎</em>' : "");
   const third = [placeLine(a), summary(a)].filter(Boolean).join(" · ");
   return `<li><a href="#/a/${a.id}" class="item">
-    <span class="thumb icon" style="--c:${k.color}">${k.icon}</span>
+    <span class="thumb">${kindImg(a.kind)}</span>
     <span class="txt"><b>${esc(titleOf(a))}</b><small>${esc(fmtDate(a.date))} · ${esc(k.label)}${marks}</small>${third ? `<small class="third">${esc(third)}</small>` : ""}</span></a></li>`;
 }
 
@@ -165,7 +165,7 @@ async function openRecord(id) {
     <div class="sheet-bar"><button class="link" data-back>‹ Back</button><a class="link" href="#/edit/${a.id}">Edit</a></div>
     ${c ? `<div class="cover"><img data-thumb="${esc(c)}" data-size="large" alt=""></div>` : ""}
     <div class="pad">
-      <div class="kind" style="color:${kindOf(a.kind).color}">${kindOf(a.kind).icon} ${esc(kindOf(a.kind).label)}</div>
+      <div class="kind" style="color:${kindOf(a.kind).color}">${kindImg(a.kind, "kimg-s")} ${esc(kindOf(a.kind).label)}</div>
       <h1>${esc(titleOf(a))}</h1>
       <p class="sub">${esc([fmtDate(a.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" }), placeLine(a)].filter(Boolean).join(" · "))}</p>
       ${a.review ? `<div class="review"><b>⚠︎ To review</b><span>${esc(a.review)}</span><div class="row"><a class="btn small" href="#/edit/${a.id}">Fix it</a><button class="btn small primary" id="reviewed">Looks right</button></div></div>` : ""}
@@ -220,6 +220,8 @@ function makeMap(el) {
   return m;
 }
 
+const kindIcon = (k) => L.icon({ iconUrl: `icons/kinds/${KINDS[k] ? k : "other"}.png`, iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -12], className: "kmarker" });
+
 const tracks = new Map();
 async function loadTrack(path) {
   if (!tracks.has(path)) tracks.set(path, backend.readText(path).then(parseGPX).catch(() => null));
@@ -230,7 +232,7 @@ async function drawRecordMap(a) {
   const el = $("#rec-map", sheet);
   const m = makeMap(el);
   if (a.latitude != null) m.setView([a.latitude, a.longitude], 12);
-  if (!a.gpxFile) { L.circleMarker([a.latitude, a.longitude], { radius: 8, color: "#fff", weight: 2, fillColor: kindOf(a.kind).color, fillOpacity: 1 }).addTo(m); return; }
+  if (!a.gpxFile) { L.marker([a.latitude, a.longitude], { icon: kindIcon(a.kind) }).addTo(m); return; }
   const t = await loadTrack(a.gpxFile);
   if (!t || !t.points.length || !document.contains(el)) return;
   const line = L.polyline(latlngs(t), { color: kindOf(a.kind).color, weight: 4 }).addTo(m);
@@ -560,7 +562,7 @@ function renderMap() {
   const pts = [];
   for (const a of list) {
     const k = kindOf(a.kind);
-    const mk = L.circleMarker([a.latitude, a.longitude], { radius: 7, color: "#fff", weight: 2, fillColor: k.color, fillOpacity: 1 }).addTo(m);
+    const mk = L.marker([a.latitude, a.longitude], { icon: kindIcon(a.kind) }).addTo(m);
     mk.bindPopup(`<b>${esc(titleOf(a))}</b><br><small>${esc(fmtDate(a.date))} · ${esc(summary(a))}</small><br><a href="#/a/${a.id}">Open ›</a>`);
     pts.push([a.latitude, a.longitude]);
   }
@@ -699,7 +701,7 @@ function renderIdeas() {
     ${list.length ? "" : `<div class="empty">No trip ideas yet — tap + to jot one down.</div>`}
     ${Object.keys(groups).sort().map((g) => `<section><h2 class="yh"><span>${esc(g)}</span><small>${groups[g].length}</small></h2>
       <ul class="list">${groups[g].map((i) => `<li><a class="item" href="#/idea/${i.id}">
-        <span class="thumb icon" style="--c:${kindOf(i.kind).color}">${kindOf(i.kind).icon}</span>
+        <span class="thumb">${kindImg(i.kind)}</span>
         <span class="txt"><b>${esc(i.title)}</b><small>${esc([kindOf(i.kind).label, i.grade, i.solo === false ? "with partner" : "solo", i.season !== "any" ? i.season : ""].filter(Boolean).join(" · "))}</small></span></a></li>`).join("")}</ul></section>`).join("")}`;
   $("#i-area").onchange = (e) => { ui.area = e.target.value; renderIdeas(); };
   $("#i-season").onchange = (e) => { ui.season = e.target.value; renderIdeas(); };
