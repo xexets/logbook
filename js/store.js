@@ -179,6 +179,7 @@ export async function refresh() {
   data.activities = a.data?.activities || [];
   data.ideas = i.data?.ideas || [];
   for (const x of [...data.activities, ...data.ideas]) if (!x.id) x.id = crypto.randomUUID().toUpperCase();
+  for (const x of [...data.activities, ...data.ideas]) if (x.kind === "alpineClimb") x.kind = "mountaineering";
   data.etags = { "logbook.json": a.etag, "ideas.json": i.etag };
   sortActs();
   saveCache();

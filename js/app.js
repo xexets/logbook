@@ -641,7 +641,7 @@ function records(list) {
   hardest("Hardest onsight", ["onsight", "flash"]);
   hardest("Hardest redpoint", ["onsight", "flash", "redpoint"]);
   hardestGrade("Hardest multipitch", ["multipitch"]);
-  hardestGrade("Hardest alpine climb", ["alpineClimb", "winterClimb"]);
+  hardestGrade("Hardest mountaineering", ["mountaineering", "winterMountaineering", "winterClimb"]);
   hardestGrade("Hardest via ferrata", ["ferrata"]);
   const f = (k, fmt) => (m) => fmt(m[1]);
   list = list.filter((a) => a.kind !== "other");   // no ski days, road trips, boat trips in records

@@ -10,7 +10,6 @@ export const KINDS = {
   sportClimb: { label: "Sport climbing", color: "#e5484d", icon: "🧗" },
   tradClimb: { label: "Trad climbing", color: "#d97706", icon: "🪢" },
   multipitch: { label: "Multipitch", color: "#e54d8f", icon: "⛰️" },
-  alpineClimb: { label: "Alpine climb", color: "#9d4edd", icon: "🔺" },
   winterClimb: { label: "Winter climb", color: "#3b82f6", icon: "🧊" },
   iceClimb: { label: "Ice climb", color: "#2563eb", icon: "⛏️" },
   bouldering: { label: "Bouldering", color: "#dc2626", icon: "🪨" },
@@ -22,15 +21,15 @@ export const KINDS = {
   bike: { label: "Bike", color: "#a16207", icon: "🚴" },
   other: { label: "Other", color: "#6b7280", icon: "⭐" },
 };
-export const kindOf = (k) => KINDS[k] || KINDS.other;
+export const kindOf = (k) => KINDS[k === "alpineClimb" ? "mountaineering" : k] || KINDS.other;
 /** Custom icon shared with the Mac app. */
 export const kindImg = (k, cls = "kimg") => KINDS[k]?.noImg
   ? `<span class="${cls} kemoji" style="--c:${KINDS[k].color}">${KINDS[k].icon}</span>`
   : `<img class="${cls}" src="icons/kinds/${KINDS[k] ? k : "other"}.png" alt="">`;
-export const isClimbing = (k) => ["sportClimb", "tradClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
+export const isClimbing = (k) => ["sportClimb", "tradClimb", "multipitch", "mountaineering", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
 export const isCragDay = (k) => k === "sportClimb" || k === "tradClimb" || k === "bouldering" || k === "climbingGym";
 export const hasGrade = (k) =>
-  ["ferrata", "sportClimb", "tradClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering",
+  ["ferrata", "sportClimb", "tradClimb", "multipitch", "winterClimb", "iceClimb", "bouldering",
    "climbingGym", "mountaineering", "winterMountaineering", "scramble"].includes(k);
 
 export const STYLES = {
@@ -129,7 +128,7 @@ export function gradeScore(g, kind) {
   if (!g) return null;
   let v;
   if (kind === "ferrata") return (v = ferrataScore(g)) != null ? { scale: "ferrata", value: v } : null;
-  if (["alpineClimb", "mountaineering", "winterMountaineering", "winterClimb", "scramble", "iceClimb"].includes(kind)) {
+  if (["mountaineering", "winterMountaineering", "winterClimb", "scramble", "iceClimb"].includes(kind)) {
     if ((v = alpineScore(g)) != null) return { scale: "alpine", value: v };
     return (v = rockScore(g)) != null ? { scale: "rock", value: v } : null;
   }
