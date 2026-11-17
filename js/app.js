@@ -52,12 +52,25 @@ export function toast(msg, ms = 3500) {
 
 // ------------------------------------------------------------------ routing (#/log, #/map, #/stats, #/ideas, #/a/<id>, #/edit/<id|new>, #/idea/<id|new>)
 window.addEventListener("hashchange", route);
+const wideQuery = matchMedia("(min-width: 1000px)");
+const isWide = () => wideQuery.matches;
+wideQuery.addEventListener("change", () => { if (sheet.open) { const h = sheet.innerHTML; sheet.close(); sheet.innerHTML = h; route(); } });
+
+function markSelected() {
+  const h = location.hash;
+  document.querySelectorAll("#main .item").forEach((a) => a.classList.toggle("sel", a.getAttribute("href") === h ||
+    (h.startsWith("#/edit/") && a.getAttribute("href") === "#/a/" + h.slice(7)) ||
+    (h.startsWith("#/idea/") && a.getAttribute("href") === "#/i/" + h.slice(7))));
+}
+
 function route() {
   document.body.classList.remove("bare");
   const [, view = "log", id] = location.hash.split("/");
   const tabView = ["log", "map", "stats", "ideas"].includes(view) ? view : (sessionStorage.getItem("tab") || "log");
   if (["log", "map", "stats", "ideas"].includes(view)) sessionStorage.setItem("tab", view);
   document.querySelectorAll("#tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tabView));
+  document.body.dataset.tab = tabView;
+  $("#pane-empty p").textContent = tabView === "ideas" ? "Select a trip idea" : "Select an outing";
   if (!sheet.open || ["log", "map", "stats", "ideas"].includes(view)) renderTab(tabView);
   if (view === "a") openRecord(id);
   else if (view === "edit") openEditor(id);
@@ -65,6 +78,7 @@ function route() {
   else if (view === "i") openIdeaRecord(id);
   else if (view === "settings") openSettings();
   else if (sheet.open) closeSheet(false);
+  markSelected();
 }
 const go = (h) => { location.hash = h; };
 const back = () => (history.length > 1 ? history.back() : go("#/" + (sessionStorage.getItem("tab") || "log")));
@@ -142,7 +156,8 @@ function row(a) {
 function openSheet(html) {
   maps = maps.filter((m) => { if (sheet.contains(m.getContainer())) { m.remove(); return false; } return true; });
   sheet.innerHTML = html;
-  if (!sheet.open) sheet.showModal();
+  // On a wide screen the record opens in a side panel and the list stays usable
+  if (!sheet.open) { if (isWide()) sheet.show(); else sheet.showModal(); }
   sheet.scrollTop = 0;
 }
 function closeSheet(nav = true) {
