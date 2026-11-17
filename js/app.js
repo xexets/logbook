@@ -426,11 +426,11 @@ function bindPosition(isNew) {
     draft.latitude = +lat.toFixed(6); draft.longitude = +lon.toFixed(6);
     if (marker) marker.setLatLng([lat, lon]);
     else marker = L.marker([lat, lon], { draggable: true }).addTo(m).on("dragend", (e) => { const p = e.target.getLatLng(); setPos(p.lat, p.lng); autoPositioned = false; });
-    if (zoom) m.setView([lat, lon], zoom);
+    if (zoom) m.setView([lat, lon], zoom, { animate: false });
     note.textContent = msg || `${draft.latitude.toFixed(5)}, ${draft.longitude.toFixed(5)} — tap the map or drag the pin to move it`;
   };
-  if (draft.latitude != null) setPos(draft.latitude, draft.longitude, null, 14);
-  else m.setView([45.65, 13.78], 9);
+  if (draft.latitude != null) { setPos(draft.latitude, draft.longitude); m.setView([draft.latitude, draft.longitude], 14, { animate: false }); }
+  else m.setView([45.65, 13.78], 9, { animate: false });
   m.on("click", (e) => { setPos(e.latlng.lat, e.latlng.lng); autoPositioned = false; });
 
   const q = $("#pos-q", sheet), res = $("#pos-res", sheet);
@@ -466,7 +466,7 @@ function bindPosition(isNew) {
     const dl = $("#dl-sec", sheet); if (dl) dl.innerHTML = knownSectors(f.elements.place.value).map((x) => `<option value="${esc(x)}">`).join("");
   });
   f.elements.sector?.addEventListener("change", auto);
-  setTimeout(() => m.invalidateSize(), 50);
+  setTimeout(() => { if (document.contains(el)) m.invalidateSize(); }, 50);
 }
 
 async function importGPX(file, isNew) {
