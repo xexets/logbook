@@ -160,7 +160,7 @@ details textarea { margin: 6px 0; }
 
 /* misc */
 .hero-msg { text-align: center; padding: 18vh 28px 40px; display: grid; gap: 12px; justify-items: center; }
-.hero-msg .logo { font-size: 64px; }
+.hero-msg .logo { width: 96px; height: 96px; border-radius: 22px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
 .hero-msg p { color: var(--dim); max-width: 340px; margin: 0; }
 #toast { position: fixed; left: 50%; bottom: calc(var(--tabs-h) + var(--safe-b) + 14px); transform: translate(-50%, 20px); opacity: 0;
   background: rgba(30,30,32,.92); color: #fff; padding: 10px 16px; border-radius: 12px; font-size: 14px; transition: .25s; z-index: 2000; pointer-events: none; max-width: 90vw; }

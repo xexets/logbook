@@ -38,7 +38,7 @@ function showSetup() {
 }
 function showSignIn() {
   document.body.classList.add("bare");
-  main.innerHTML = `<div class="hero-msg"><div class="logo">⛰️</div><h1>Logbook</h1>
+  main.innerHTML = `<div class="hero-msg"><img class="logo" src="icons/icon-192.png" alt=""><h1>Logbook</h1>
     <p>Your climbs, hikes and trip ideas, stored in your OneDrive.</p>
     <button class="btn primary" id="signin">Sign in with Microsoft</button></div>`;
   $("#signin").onclick = () => backend.signIn();
