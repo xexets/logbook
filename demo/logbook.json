@@ -1,0 +1,140 @@
+{
+ "version": 1,
+ "activities": [
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000001",
+   "date": "2025-06-12T08:00:00Z",
+   "title": "An Teallach \u2013 scramble",
+   "country": "United Kingdom",
+   "place": "Highlands",
+   "kind": "scramble",
+   "distanceKm": 19.4,
+   "elevationGainM": 1150,
+   "durationMinutes": 450,
+   "maxAltitudeM": 1062,
+   "grade": "F",
+   "notes": "Pinnacles skipped \u2013 only Lord Berkeley's seat done. Counterclockwise.\n\nAccess scramble on pinnacles is too exposed. Access from Lord Berkeley's seat is much better.",
+   "gpxFile": "gpx/an-teallach.gpx",
+   "photos": [
+    "photos/aaaaaaaa/view.png"
+   ],
+   "latitude": 57.8,
+   "longitude": -5.3
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000002",
+   "date": "2025-01-03T10:00:00Z",
+   "title": "Arrampicata Aurisina",
+   "country": "Italy",
+   "place": "Aurisina",
+   "kind": "sportClimb",
+   "latitude": 45.75,
+   "longitude": 13.67,
+   "routes": [
+    {
+     "grade": "5b",
+     "name": "A sinistra di analfabeta",
+     "style": "onsight"
+    },
+    {
+     "grade": "5b",
+     "name": "Midwest pig",
+     "style": "onsight"
+    },
+    {
+     "grade": "5c",
+     "name": "Bestia",
+     "style": "onsight"
+    },
+    {
+     "grade": "5c",
+     "name": "Lestofante",
+     "style": "onsight"
+    },
+    {
+     "grade": "6a+",
+     "name": "Slalom",
+     "style": "second"
+    }
+   ],
+   "review": "Read from a narrative note: check the style of the 6a+ (seconded?)."
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000003",
+   "date": "2024-08-20T07:00:00Z",
+   "title": "Via ferrata Tomaselli",
+   "country": "Italy",
+   "place": "Fanes, Dolomites",
+   "kind": "ferrata",
+   "grade": "D",
+   "distanceKm": 9.5,
+   "elevationGainM": 850,
+   "durationMinutes": 360,
+   "latitude": 46.53,
+   "longitude": 12.0
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000004",
+   "date": "2024-05-11T09:00:00Z",
+   "title": "Val Rosandra",
+   "country": "Italy",
+   "place": "Trieste",
+   "kind": "sportClimb",
+   "latitude": 45.62,
+   "longitude": 13.87,
+   "routes": [
+    {
+     "grade": "6a",
+     "name": "Spigolo",
+     "style": "redpoint"
+    },
+    {
+     "grade": "5c+",
+     "name": "Diedro",
+     "style": "onsight"
+    }
+   ]
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000005",
+   "date": "2023-07-30T05:00:00Z",
+   "title": "Gran Paradiso",
+   "country": "Italy",
+   "place": "Valsavarenche",
+   "kind": "mountaineering",
+   "grade": "F+",
+   "distanceKm": 14,
+   "elevationGainM": 1300,
+   "durationMinutes": 540,
+   "maxAltitudeM": 4061,
+   "latitude": 45.52,
+   "longitude": 7.27
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000006",
+   "date": "2015-06-24T08:00:00Z",
+   "title": "Teide",
+   "country": "Spain",
+   "place": "Tenerife",
+   "kind": "hike",
+   "distanceKm": 17.2,
+   "elevationGainM": 1350,
+   "durationMinutes": 420,
+   "maxAltitudeM": 3715,
+   "latitude": 28.27,
+   "longitude": -16.64
+  },
+  {
+   "id": "AAAAAAAA-0000-0000-0000-000000000007",
+   "date": "2015-08-30T07:00:00Z",
+   "title": "Diretta Kugy, J\u00f4f Fuart",
+   "country": "Italy",
+   "place": "Alpi Giulie",
+   "kind": "alpineClimb",
+   "grade": "AD (III)",
+   "durationMinutes": 600,
+   "latitude": 46.44,
+   "longitude": 13.49
+  }
+ ]
+}
