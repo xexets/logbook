@@ -193,3 +193,6 @@ em.warn { font-style: normal; color: #d97706; }
 .thumb .kimg { width: 46px; height: 46px; border-radius: 11px; display: block; opacity: 1; }
 .kimg-s { width: 18px; height: 18px; border-radius: 4px; vertical-align: -3px; margin-right: 4px; }
 .kmarker { border-radius: 7px; box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+
+.btn.wide { width: 100%; margin: 6px 0 4px; }
+.idea-chips { padding: 0; margin-bottom: 10px; }

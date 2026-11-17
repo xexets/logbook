@@ -62,6 +62,7 @@ function route() {
   if (view === "a") openRecord(id);
   else if (view === "edit") openEditor(id);
   else if (view === "idea") openIdea(id);
+  else if (view === "i") openIdeaRecord(id);
   else if (view === "settings") openSettings();
   else if (sheet.open) closeSheet(false);
 }
@@ -265,7 +266,8 @@ function ideaToActivity() {
   const idea = data.ideas.find((x) => x.id === sessionStorage.getItem("fromIdea"));
   const a = newActivity(idea?.kind || "hike");
   if (idea) Object.assign(a, { title: idea.title, place: idea.area, country: idea.country || "", grade: idea.grade || "",
-    notes: [idea.notes, idea.links].filter(Boolean).join("\n\n"), gpxFile: idea.gpxFile, photos: [...(idea.photos || [])] });
+    notes: [idea.notes, idea.links].filter(Boolean).join("\n\n"), gpxFile: idea.gpxFile, photos: [...(idea.photos || [])],
+    coverPhoto: idea.coverPhoto, latitude: idea.latitude, longitude: idea.longitude });
   return a;
 }
 
@@ -419,25 +421,25 @@ function knownPosition(loc, sec, id) {
 }
 
 let autoPositioned = false;
-function bindPosition(isNew) {
+function bindPosition(isNew, obj = draft, autoFill = true) {
   const el = $("#pos-map", sheet);
   const m = makeMap(el);
   let marker = null;
   const note = $("#pos-note", sheet);
   const setPos = (lat, lon, msg, zoom) => {
-    draft.latitude = +lat.toFixed(6); draft.longitude = +lon.toFixed(6);
+    obj.latitude = +lat.toFixed(6); obj.longitude = +lon.toFixed(6);
     if (marker) marker.setLatLng([lat, lon]);
     else marker = L.marker([lat, lon], { draggable: true }).addTo(m).on("dragend", (e) => { const p = e.target.getLatLng(); setPos(p.lat, p.lng); autoPositioned = false; });
     if (zoom) m.setView([lat, lon], zoom, { animate: false });
-    note.textContent = msg || `${draft.latitude.toFixed(5)}, ${draft.longitude.toFixed(5)} — tap the map or drag the pin to move it`;
+    note.textContent = msg || `${obj.latitude.toFixed(5)}, ${obj.longitude.toFixed(5)} — tap the map or drag the pin to move it`;
   };
-  if (draft.latitude != null) { setPos(draft.latitude, draft.longitude); m.setView([draft.latitude, draft.longitude], 14, { animate: false }); }
+  if (obj.latitude != null) { setPos(obj.latitude, obj.longitude); m.setView([obj.latitude, obj.longitude], 14, { animate: false }); }
   else m.setView([45.65, 13.78], 9, { animate: false });
   m.on("click", (e) => { setPos(e.latlng.lat, e.latlng.lng); autoPositioned = false; });
 
   const q = $("#pos-q", sheet), res = $("#pos-res", sheet);
   const search = async () => {
-    const term = q.value.trim() || [draft.sector, draft.place, draft.country].filter(Boolean).join(", ");
+    const term = q.value.trim() || [obj.sector, obj.place || obj.area, obj.country].filter(Boolean).join(", ");
     if (!term) return;
     q.value = term; res.innerHTML = `<p class="hint">Searching…</p>`;
     try {
@@ -455,9 +457,10 @@ function bindPosition(isNew) {
 
   // known location + sector → reuse the position from earlier outings
   const f = sheet.querySelector("form");
+  if (!autoFill) { setTimeout(() => { if (document.contains(el)) m.invalidateSize(); }, 50); return; }
   const auto = () => {
-    if (!isClimbing(f.elements.kind.value) || draft.gpxFile || (draft.latitude != null && !autoPositioned)) return;
-    const hit = knownPosition(f.elements.place.value, f.elements.sector?.value, draft.id);
+    if (!isClimbing(f.elements.kind.value) || obj.gpxFile || (obj.latitude != null && !autoPositioned)) return;
+    const hit = knownPosition(f.elements.place.value, f.elements.sector?.value, obj.id);
     if (!hit) return;
     autoPositioned = true;
     setPos(hit.latitude, hit.longitude, `Position filled in from your earlier outings at ${placeLine(hit)}`, 14);
@@ -700,11 +703,63 @@ function renderIdeas() {
     </div></div>
     ${list.length ? "" : `<div class="empty">No trip ideas yet — tap + to jot one down.</div>`}
     ${Object.keys(groups).sort().map((g) => `<section><h2 class="yh"><span>${esc(g)}</span><small>${groups[g].length}</small></h2>
-      <ul class="list">${groups[g].map((i) => `<li><a class="item" href="#/idea/${i.id}">
+      <ul class="list">${groups[g].map((i) => `<li><a class="item" href="#/i/${i.id}">
         <span class="thumb">${kindImg(i.kind)}</span>
         <span class="txt"><b>${esc(i.title)}</b><small>${esc([kindOf(i.kind).label, i.grade, i.solo === false ? "with partner" : "solo", i.season !== "any" ? i.season : ""].filter(Boolean).join(" · "))}</small></span></a></li>`).join("")}</ul></section>`).join("")}`;
   $("#i-area").onchange = (e) => { ui.area = e.target.value; renderIdeas(); };
   $("#i-season").onchange = (e) => { ui.season = e.target.value; renderIdeas(); };
+}
+
+function openIdeaRecord(id) {
+  const i = data.ideas.find((x) => x.id === id);
+  if (!i) return go("#/ideas");
+  const k = kindOf(i.kind);
+  const cover = i.coverPhoto && i.photos?.includes(i.coverPhoto) ? i.coverPhoto : i.photos?.[0];
+  const links = (i.links || "").split(/[\s,]+/).filter((u) => /^https?:\/\//.test(u));
+  const hasMap = i.gpxFile || i.latitude != null;
+  openSheet(`
+    <div class="sheet-bar"><button class="link" data-back>‹ Back</button><a class="link" href="#/idea/${i.id}">Edit</a></div>
+    ${cover ? `<div class="cover"><img data-thumb="${esc(cover)}" data-size="large" alt=""></div>` : ""}
+    <div class="pad">
+      <div class="kind" style="color:${k.color}">${kindImg(i.kind, "kimg-s")} ${esc(k.label)}</div>
+      <h1>${esc(i.title)}</h1>
+      <p class="sub">${esc([i.area, i.country].filter(Boolean).join(", "))}</p>
+      <div class="chips idea-chips">${[i.grade && "Grade " + i.grade, i.solo === false ? "With partner" : "Solo", i.season && i.season !== "any" ? i.season[0].toUpperCase() + i.season.slice(1) : "Any season"].filter(Boolean).map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+      <button class="btn primary wide" id="idea-done">✓ Done it — add to logbook</button>
+      ${hasMap ? `<div class="map" id="idea-map"></div>` : ""}
+      ${i.gpxFile ? `<div class="profile"><canvas id="idea-prof"></canvas></div>
+        <div class="row gpx"><span>〰︎ ${esc(i.gpxFile.split("/").pop())}</span><button class="btn small" id="idea-dl">Download GPX</button></div>` : ""}
+      ${links.length ? `<h3>Links</h3><div class="links">${links.map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">↗ ${esc(new URL(u).hostname)}</a>`).join("")}</div>` : ""}
+      ${i.notes ? `<div class="notes">${linkify(i.notes)}</div>` : ""}
+      ${i.photos?.length ? `<div class="grid">${i.photos.map((p) => `<button class="ph" data-photo="${esc(p)}"><img data-thumb="${esc(p)}" alt=""></button>`).join("")}</div>` : ""}
+      ${!hasMap && !i.notes && !links.length && !i.photos?.length ? `<p class="hint">Nothing added yet — tap Edit to add notes, links, pictures, a GPX track or a map position.</p>` : ""}
+    </div>`);
+  hydrate(sheet);
+  sheet.querySelector("[data-back]").onclick = back;
+  sheet.querySelectorAll("[data-photo]").forEach((b) => (b.onclick = () => openPhoto(b.dataset.photo)));
+  $("#idea-done", sheet).onclick = () => { sessionStorage.setItem("fromIdea", i.id); draft = null; location.replace("#/edit/new"); };
+  $("#idea-dl", sheet)?.addEventListener("click", async () => {
+    const u = await backend.downloadURL(i.gpxFile);
+    if (u) { const l = document.createElement("a"); l.href = u; l.download = i.gpxFile.split("/").pop(); l.target = "_blank"; l.click(); }
+  });
+  if (hasMap) drawIdeaMap(i);
+}
+
+async function drawIdeaMap(i) {
+  const el = $("#idea-map", sheet), m = makeMap(el), col = kindOf(i.kind).color;
+  if (i.latitude != null) { m.setView([i.latitude, i.longitude], 13, { animate: false }); L.marker([i.latitude, i.longitude], { icon: kindIcon(i.kind) }).addTo(m); }
+  if (!i.gpxFile) return;
+  const t = await loadTrack(i.gpxFile);
+  if (!t || !t.points.length || !document.contains(el)) return;
+  const line = L.polyline(latlngs(t), { color: col, weight: 4 }).addTo(m);
+  m.fitBounds(line.getBounds(), { padding: [20, 20], animate: false });
+  const prof = profile(t);
+  if (prof.length > 1 && $("#idea-prof", sheet)) charts.push(new Chart($("#idea-prof", sheet), {
+    type: "line",
+    data: { datasets: [{ data: prof, borderColor: col, backgroundColor: col + "33", fill: true, pointRadius: 0, borderWidth: 2, tension: 0.2 }] },
+    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: { x: { type: "linear", ticks: { callback: (v) => `${v} km`, maxTicksLimit: 6 } }, y: { ticks: { callback: (v) => `${v} m`, maxTicksLimit: 4 } } } },
+  }));
 }
 
 let ideaDraft = null, ideaPending = [];
@@ -727,9 +782,22 @@ function openIdea(id) {
       <label>Links<textarea name="links" rows="2" placeholder="Paste web links">${esc(i.links)}</textarea></label>
       ${links.length ? `<div class="links">${links.map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">↗ ${esc(new URL(u).hostname)}</a>`).join("")}</div>` : ""}
       <label>Notes<textarea name="notes" rows="5">${esc(i.notes)}</textarea></label>
+      <fieldset><legend>Track</legend>
+        <div class="row gpx"><span>${i.gpxFile ? "〰︎ " + esc(i.gpxFile.split("/").pop()) : "No GPX track"}</span>
+          <label class="btn small">${i.gpxFile ? "Replace" : "Import GPX"}<input type="file" id="igpx-in" hidden></label>
+          ${i.gpxFile ? `<button class="btn small" data-rmgpx>Remove</button>` : ""}</div>
+        <p class="hint" id="igpx-note"></p>
+      </fieldset>
+      <fieldset><legend>Position</legend>
+        <div class="row"><input type="search" id="pos-q" placeholder="Search a crag, village, summit…"><button class="btn small" data-possearch>Search</button></div>
+        <div id="pos-res" class="pos-res"></div>
+        <div class="map small" id="pos-map"></div>
+        <p class="hint" id="pos-note">${i.latitude != null ? `${(+i.latitude).toFixed(5)}, ${(+i.longitude).toFixed(5)}` : "Search, or tap the map to set the position"}</p>
+      </fieldset>
       <fieldset><legend>Pictures / maps</legend>
         <div class="grid edit">${(i.photos || []).map((p) => { const pend = ideaPending.find((x) => x.path === p);
-          return `<div class="ph" data-p="${esc(p)}"><img ${pend ? `src="${pend.preview}"` : `data-thumb="${esc(p)}"`} alt=""><button class="x">✕</button></div>`; }).join("")}</div>
+          const isCover = (i.coverPhoto && i.photos.includes(i.coverPhoto) ? i.coverPhoto : i.photos[0]) === p;
+          return `<div class="ph ${isCover ? "cover-on" : ""}" data-p="${esc(p)}"><img ${pend ? `src="${pend.preview}"` : `data-thumb="${esc(p)}"`} alt=""><button class="star" aria-label="Use as cover">${isCover ? "★" : "☆"}</button><button class="x">✕</button></div>`; }).join("")}</div>
         <label class="btn small">+ Add pictures<input type="file" id="ph-in" accept="image/*" multiple hidden></label>
       </fieldset>
       ${existing ? `<button class="btn primary" data-done>✓ Done it — add to logbook</button><button class="btn danger" data-delete>Delete idea</button>` : ""}
@@ -753,13 +821,35 @@ function openIdea(id) {
     }
     openIdea(id);
   };
-  s.querySelectorAll(".grid.edit .x").forEach((b) => (b.onclick = () => { read(); const p = b.parentElement.dataset.p; i.photos = i.photos.filter((x) => x !== p); openIdea(id); }));
+  s.querySelectorAll(".grid.edit .x").forEach((b) => (b.onclick = () => { read(); const p = b.parentElement.dataset.p; i.photos = i.photos.filter((x) => x !== p); if (i.coverPhoto === p) delete i.coverPhoto; openIdea(id); }));
+  s.querySelectorAll(".grid.edit .star").forEach((b) => (b.onclick = (e) => { e.preventDefault(); read(); i.coverPhoto = b.parentElement.dataset.p; openIdea(id); }));
+  s.querySelector("[data-rmgpx]")?.addEventListener("click", (e) => { e.preventDefault(); read(); delete i.gpxFile; openIdea(id); });
+  s.querySelector("#igpx-in").onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    read();
+    const text = await file.text(), t = parseGPX(text), st = gpxStats(t);
+    if (!st) { $("#igpx-note", s).textContent = "Couldn't find a track in that file."; return; }
+    const path = `gpx/idea ${file.name.toLowerCase().endsWith(".gpx") ? file.name : file.name + ".gpx"}`;
+    ideaPending.push({ path, blob: new Blob([text], { type: "application/gpx+xml" }), type: "application/gpx+xml" });
+    tracks.set(path, Promise.resolve(t));
+    i.gpxFile = path;
+    if (i.latitude == null) { i.latitude = st.start.lat; i.longitude = st.start.lon; }
+    openIdea(id);
+    $("#igpx-note", sheet).textContent = `${fmtKm(st.distanceKm)}${st.elevationGainM != null ? " · ↑" + fmtM(st.elevationGainM) : ""}${st.maxAltitudeM != null ? " · top " + fmtM(st.maxAltitudeM) : ""}`;
+  };
+  bindPosition(false, i, false);
   s.querySelector("[data-save]").onclick = async () => {
     read();
     if (!i.title) return toast("Give the idea a name first");
     try {
-      for (const p of ideaPending) { const st = await backend.upload(p.path, p.blob, p.type); i.photos = i.photos.map((x) => (x === p.path ? st : x)); }
-      await saveIdea(i); ideaDraft = null; ideaPending = []; toast("Saved"); back();
+      for (const p of ideaPending) {
+        if (!i.photos.includes(p.path) && i.gpxFile !== p.path) continue;   // removed before saving
+        const st = await backend.upload(p.path, p.blob, p.type);
+        i.photos = i.photos.map((x) => (x === p.path ? st : x));
+        if (i.gpxFile === p.path) i.gpxFile = st;
+        if (i.coverPhoto === p.path) i.coverPhoto = st;
+      }
+      await saveIdea(i); ideaDraft = null; ideaPending = []; toast("Saved"); location.replace(`#/i/${i.id}`);
     } catch (e) { toast(e.message); }
   };
   s.querySelector("[data-delete]")?.addEventListener("click", async () => {
