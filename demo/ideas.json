@@ -10,14 +10,16 @@
    "solo": false,
    "season": "any",
    "links": "https://www.gulliver.it/itinerari/montiego-monte-balza-della-penna-via-del-grande-traverso/",
-   "notes": "Via del grande traverso."
+   "notes": "Via del grande traverso.",
+   "id": "41A4E706-A180-43E4-8C51-6AA6AAD2EC1F"
   },
   {
    "title": "Ferrata Arezzo",
    "area": "Mercatale",
    "kind": "ferrata",
    "solo": true,
-   "season": "summer"
+   "season": "summer",
+   "id": "3B6A83B7-F25B-43F8-989E-C0C4AA041A9A"
   },
   {
    "title": "Gran Sasso \u2013 centenario",
@@ -25,7 +27,8 @@
    "kind": "ferrata",
    "solo": true,
    "season": "summer",
-   "grade": "D"
+   "grade": "D",
+   "id": "38038256-76EE-4DEA-B2D4-134AE23E270C"
   },
   {
    "title": "Old Man of Hoy",
@@ -34,7 +37,8 @@
    "kind": "multipitch",
    "grade": "E1 5b",
    "solo": false,
-   "season": "summer"
+   "season": "summer",
+   "id": "E03FFDF8-1750-4E92-A04D-30EE94C43BB5"
   }
  ]
 }

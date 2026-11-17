@@ -178,6 +178,7 @@ export async function refresh() {
   const [a, i] = await Promise.all([backend.readJSON("logbook.json"), backend.readJSON("ideas.json")]);
   data.activities = a.data?.activities || [];
   data.ideas = i.data?.ideas || [];
+  for (const x of [...data.activities, ...data.ideas]) if (!x.id) x.id = crypto.randomUUID().toUpperCase();
   data.etags = { "logbook.json": a.etag, "ideas.json": i.etag };
   sortActs();
   saveCache();
