@@ -1,5 +1,5 @@
 // Caches the app itself so it opens instantly (and offline). Data always comes fresh from OneDrive.
-const CACHE = "logbook-v9";
+const CACHE = "logbook-v10";
 const SHELL = ["./", "index.html", "app.css", "config.js", "js/app.js", "js/model.js", "js/gpx.js", "js/store.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png",
   "https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js",
@@ -16,7 +16,8 @@ self.addEventListener("fetch", (e) => {
   const isShell = e.request.method === "GET" && (url.origin === location.origin || SHELL.includes(e.request.url));
   if (!isShell) return;   // OneDrive, Microsoft login, map tiles: straight to the network
   // network first (so updates show up), cache as fallback
-  e.respondWith(fetch(e.request).then((r) => {
+  const fresh = url.origin === location.origin ? new Request(e.request, { cache: "no-cache" }) : e.request;   // always revalidate our own files
+  e.respondWith(fetch(fresh).then((r) => {
     const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); return r;
   }).catch(() => caches.match(e.request, { ignoreSearch: true })));
 });
