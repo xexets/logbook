@@ -250,3 +250,7 @@ em.warn { font-style: normal; color: #d97706; }
 
 .route.pitch { grid-template-columns: 28px 52px 1fr 128px 30px; }
 .route .pn { color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.providers { display: grid; gap: 10px; width: min(320px, 100%); }
+.providers .btn small { font-weight: 400; opacity: .7; }
+.providers .btn:disabled { opacity: .55; }

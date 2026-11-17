@@ -1,5 +1,6 @@
 // Storage: the Logbook folder in OneDrive (via Microsoft Graph), or ./demo/ in demo mode.
 import { CONFIG } from "../config.js";
+import { Dropbox, GoogleDrive } from "./providers.js";
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const SCOPES = ["Files.ReadWrite"];
@@ -16,8 +17,10 @@ class OneDrive {
     this.timer = null;
   }
 
+  static get configured() { return !!CONFIG.clientId && !CONFIG.clientId.startsWith("PASTE"); }
+
   async init() {
-    if (!CONFIG.clientId || CONFIG.clientId.startsWith("PASTE")) throw new Error("not-configured");
+    if (!OneDrive.configured) throw new Error("not-configured");
     this.msal = new msal.PublicClientApplication({
       auth: {
         clientId: CONFIG.clientId,
@@ -33,7 +36,7 @@ class OneDrive {
   }
 
   signIn() { return this.msal.loginRedirect({ scopes: SCOPES, prompt: "select_account" }); }
-  signOut() { localStorage.removeItem("logbook.cache"); return this.msal.logoutRedirect({ account: this.account }); }
+  signOut() { localStorage.removeItem("logbook.cache"); localStorage.removeItem("logbook.provider"); return this.msal.logoutRedirect({ account: this.account }); }
   get user() { return this.account?.username || ""; }
 
   async token() {
@@ -154,8 +157,23 @@ class Demo {
   async remove() {}
 }
 
-export const backend = new URLSearchParams(location.search).has("demo") ? new Demo() : new OneDrive();
-export const isDemo = backend instanceof Demo;
+// Where the logbook lives: chosen on the sign-in screen, remembered on this device.
+export const PROVIDERS = {
+  onedrive: { name: "Microsoft OneDrive", cls: OneDrive },
+  dropbox: { name: "Dropbox", cls: Dropbox },
+  google: { name: "Google Drive", cls: GoogleDrive },
+};
+export const isDemo = new URLSearchParams(location.search).has("demo");
+export let providerKey = PROVIDERS[localStorage.getItem("logbook.provider")] ? localStorage.getItem("logbook.provider") : "onedrive";
+export let backend = isDemo ? new Demo() : new PROVIDERS[providerKey].cls();
+
+export function chooseProvider(key) {
+  localStorage.setItem("logbook.provider", key);
+  localStorage.removeItem("logbook.cache");
+  providerKey = key;
+  backend = new PROVIDERS[key].cls();
+  return backend;
+}
 
 // ------------------------------------------------------------------ data layer
 export const data = { activities: [], ideas: [], etags: {} };

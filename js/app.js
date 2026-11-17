@@ -3,7 +3,7 @@ import {
   fmtKm, fmtM, fmtDur, fmtDate, summary, gradeScore, gradeLabel, topGrade, parseRoutes, esc, uuid,
 } from "./model.js";
 import { parseGPX, gpxStats, profile, latlngs } from "./gpx.js";
-import { backend, isDemo, data, loadCached, refresh, saveActivity, deleteActivity, saveIdea, deleteIdea } from "./store.js";
+import { backend, isDemo, PROVIDERS, providerKey, chooseProvider, data, loadCached, refresh, saveActivity, deleteActivity, saveIdea, deleteIdea } from "./store.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const main = $("#main"), sheet = $("#sheet");
@@ -16,7 +16,8 @@ async function boot() {
   let signedIn = false;
   try { signedIn = await backend.init(); }
   catch (e) {
-    if (e.message === "not-configured") return showSetup();
+    if (e.message === "not-configured") return showSignIn();
+    if (e.message === "redirecting") return;
     return fatal(e);
   }
   if (!signedIn) return showSignIn();
@@ -39,9 +40,18 @@ function showSetup() {
 function showSignIn() {
   document.body.classList.add("bare");
   main.innerHTML = `<div class="hero-msg"><img class="logo" src="icons/icon-192.png" alt=""><h1>Logbook</h1>
-    <p>Your climbs, hikes and trip ideas, stored in your OneDrive.</p>
-    <button class="btn primary" id="signin">Sign in with Microsoft</button></div>`;
-  $("#signin").onclick = () => backend.signIn();
+    <p>Your climbs, hikes and trip ideas — kept in your own cloud storage. Choose where:</p>
+    <div class="providers">${Object.entries(PROVIDERS).map(([k, p]) => `
+      <button class="btn ${p.cls.configured ? "primary" : ""}" data-p="${k}" ${p.cls.configured ? "" : "disabled"}>
+        ${esc(p.name)}${p.cls.configured ? "" : " <small>(coming soon)</small>"}</button>`).join("")}</div>
+    <p class="hint">Your data never goes anywhere else: the app reads and writes a Logbook folder in your storage.</p>
+    <p><a href="?demo">Try it with sample data</a></p></div>`;
+  main.querySelectorAll("[data-p]").forEach((b) => (b.onclick = async () => {
+    b.disabled = true; b.textContent = "Opening sign-in…";
+    const be = chooseProvider(b.dataset.p);
+    try { await be.init(); } catch {}
+    be.signIn();
+  }));
 }
 function fatal(e) { main.innerHTML = `<div class="hero-msg"><h1>Something went wrong</h1><p>${esc(e.message || e)}</p></div>`; }
 
@@ -886,12 +896,13 @@ function openIdea(id) {
 function openSettings() {
   openSheet(`<div class="sheet-bar"><button class="link" data-back>‹ Back</button><b>Settings</b><span></span></div>
     <div class="pad">
-      <p><small class="dim">Signed in as</small><br>${esc(backend.user)}</p>
+      <p><small class="dim">${isDemo ? "Demo" : "Storage: " + esc(PROVIDERS[providerKey].name)}</small><br>${esc(backend.user)}</p>
       ${isDemo ? `<p class="hint">You're looking at sample data. Nothing is saved.</p>` : `
-      <label class="form">Logbook folder in OneDrive<input id="folder" value="${esc(backend.root)}"></label>
-      <p class="hint">Must match the folder the Mac app uses (default: Logbook).</p>`}
-      <p><button class="btn" id="reload">Reload from OneDrive</button></p>
-      <p><button class="btn danger" id="signout">${isDemo ? "Leave demo" : "Sign out"}</button></p>
+      ${providerKey === "dropbox" ? `<p class="hint">Your logbook is in Dropbox ▸ Apps ▸ the Logbook app folder.</p>` : `
+      <label class="form">Logbook folder in ${providerKey === "google" ? "Google Drive" : "OneDrive"}<input id="folder" value="${esc(backend.root)}"></label>
+      <p class="hint">Must match the folder the Mac app uses (default: Logbook).</p>`}`}
+      <p><button class="btn" id="reload">Reload</button></p>
+      <p><button class="btn danger" id="signout">${isDemo ? "Leave demo" : "Sign out / switch storage"}</button></p>
       <p class="hint">Add to your Home Screen: Share ▸ Add to Home Screen.</p>
     </div>`);
   sheet.querySelector("[data-back]").onclick = back;

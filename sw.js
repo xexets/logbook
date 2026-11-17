@@ -1,6 +1,6 @@
 // Caches the app itself so it opens instantly (and offline). Data always comes fresh from OneDrive.
-const CACHE = "logbook-v18";
-const SHELL = ["./", "index.html", "app.css", "config.js", "js/app.js", "js/model.js", "js/gpx.js", "js/store.js",
+const CACHE = "logbook-v19";
+const SHELL = ["./", "index.html", "app.css", "config.js", "js/app.js", "js/model.js", "js/gpx.js", "js/store.js", "js/providers.js",
   "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png",
   "https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.27.0/lib/msal-browser.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js",
