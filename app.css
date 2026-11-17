@@ -180,3 +180,12 @@ em.warn { font-style: normal; color: #d97706; }
   .item .meta { display: none; }
   .txt small.sum { display: block; color: var(--ink); opacity: .75; }
 }
+
+.map.small { height: 220px; margin-top: 0; }
+.pos-res { display: grid; gap: 4px; }
+.pos-item { text-align: left; border: 0; background: var(--field); border-radius: 8px; padding: 8px 10px; font: inherit; color: var(--ink); display: grid; }
+.pos-item small { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.txt small.third { color: var(--dim); opacity: .85; }
+.txt .mk { font-size: 11px; opacity: .8; margin-left: 2px; }
+.item .meta { display: none; }
+.txt small.sum { display: none !important; }

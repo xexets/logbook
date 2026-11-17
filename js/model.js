@@ -3,7 +3,7 @@
 export const KINDS = {
   hike: { label: "Hike", color: "#34a853", icon: "🥾" },
   walk: { label: "Walk", color: "#2bb3a3", icon: "🚶" },
-  scramble: { label: "Scramble", color: "#9c6b3f", icon: "🪨" },
+  scramble: { label: "Scramble", color: "#9c6b3f", icon: "🐐" },
   ferrata: { label: "Via ferrata", color: "#f08c00", icon: "🔗" },
   mountaineering: { label: "Mountaineering", color: "#5b5bd6", icon: "🏔️" },
   winterMountaineering: { label: "Winter mountaineering", color: "#1aa3c9", icon: "❄️" },
@@ -11,7 +11,7 @@ export const KINDS = {
   multipitch: { label: "Multipitch", color: "#e54d8f", icon: "⛰️" },
   alpineClimb: { label: "Alpine climb", color: "#9d4edd", icon: "🔺" },
   winterClimb: { label: "Winter climb", color: "#3b82f6", icon: "🧊" },
-  iceClimb: { label: "Ice climb", color: "#2563eb", icon: "🧊" },
+  iceClimb: { label: "Ice climb", color: "#2563eb", icon: "⛏️" },
   bouldering: { label: "Bouldering", color: "#dc2626", icon: "🪨" },
   climbingGym: { label: "Climbing gym", color: "#f87171", icon: "🏢" },
   snowshoeing: { label: "Snowshoeing", color: "#06b6d4", icon: "🌨️" },
@@ -22,6 +22,7 @@ export const KINDS = {
   other: { label: "Other", color: "#6b7280", icon: "⭐" },
 };
 export const kindOf = (k) => KINDS[k] || KINDS.other;
+export const isClimbing = (k) => ["sportClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering", "climbingGym"].includes(k);
 export const isCragDay = (k) => k === "sportClimb" || k === "bouldering" || k === "climbingGym";
 export const hasGrade = (k) =>
   ["ferrata", "sportClimb", "multipitch", "alpineClimb", "winterClimb", "iceClimb", "bouldering",
@@ -49,7 +50,10 @@ export function newIdea() {
 export const yearOf = (a) => new Date(a.date).getFullYear();
 export const coverOf = (a) => (a.coverPhoto && a.photos?.includes(a.coverPhoto) ? a.coverPhoto : a.photos?.[0]);
 export const titleOf = (a) => a.title || a.place || kindOf(a.kind).label;
-export const placeLine = (a) => [a.place, a.country].filter(Boolean).join(", ");
+export const placeLine = (a) => {
+  const loc = isClimbing(a.kind) && a.sector ? [a.place, a.sector].filter(Boolean).join(" › ") : a.place;
+  return [loc, a.country].filter(Boolean).join(", ");
+};
 
 // ---- formatting
 export const fmtKm = (v) => (v >= 100 ? `${Math.round(v)} km` : `${(Math.round(v * 10) / 10).toFixed(1)} km`);

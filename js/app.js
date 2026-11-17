@@ -1,5 +1,5 @@
 import {
-  KINDS, kindOf, isCragDay, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
+  KINDS, kindOf, isCragDay, isClimbing, hasGrade, STYLES, newActivity, newIdea, yearOf, coverOf, titleOf, placeLine,
   fmtKm, fmtM, fmtDur, fmtDate, summary, gradeScore, gradeLabel, topGrade, parseRoutes, esc, uuid,
 } from "./model.js";
 import { parseGPX, gpxStats, profile, latlngs } from "./gpx.js";
@@ -129,11 +129,12 @@ function renderLog() {
   hydrate(main);
 }
 function row(a) {
-  const c = coverOf(a);
+  const k = kindOf(a.kind), n = a.photos?.length || 0;
+  const marks = (n ? ` <span class="mk">📷${n > 1 ? n : ""}</span>` : "") + (a.gpxFile ? ' <span class="mk">〰︎</span>' : "") + (a.review ? ' <em class="warn">⚠︎</em>' : "");
+  const third = [placeLine(a), summary(a)].filter(Boolean).join(" · ");
   return `<li><a href="#/a/${a.id}" class="item">
-    ${c ? `<span class="thumb"><img data-thumb="${esc(c)}" alt="">${badge(a.kind)}</span>` : `<span class="thumb icon" style="--c:${kindOf(a.kind).color}">${kindOf(a.kind).icon}</span>`}
-    <span class="txt"><b>${esc(titleOf(a))}</b><small>${esc([fmtDate(a.date), placeLine(a)].filter(Boolean).join(" · "))}</small><small class="sum">${a.review ? '<em class="warn">⚠︎</em> ' : ""}${esc(summary(a))}</small></span>
-    <span class="meta">${a.review ? '<em class="warn">⚠︎</em> ' : ""}${esc(summary(a))}${a.gpxFile ? " <i>〰︎</i>" : ""}</span></a></li>`;
+    <span class="thumb icon" style="--c:${k.color}">${k.icon}</span>
+    <span class="txt"><b>${esc(titleOf(a))}</b><small>${esc(fmtDate(a.date))} · ${esc(k.label)}${marks}</small>${third ? `<small class="third">${esc(third)}</small>` : ""}</span></a></li>`;
 }
 
 // ------------------------------------------------------------------ RECORD
@@ -278,10 +279,24 @@ function renderEditor(isNew) {
         <label>Date<input type="date" name="date" value="${dateStr}"></label>
         <label>Kind<select name="kind">${Object.entries(KINDS).map(([k, v]) => opt(k, `${v.icon} ${v.label}`, a.kind)).join("")}</select></label>
       </div>
+      ${isClimbing(a.kind) ? `
       <div class="row2">
-        <label>Place<input name="place" value="${esc(a.place)}" placeholder="e.g. Aurisina"></label>
-        <label>Country<input name="country" value="${esc(a.country)}"></label>
+        <label>Location<input name="place" value="${esc(a.place)}" placeholder="e.g. Napoleonica" list="dl-loc" autocomplete="off"></label>
+        <label>Sector<input name="sector" value="${esc(a.sector || "")}" placeholder="e.g. Calabroni" list="dl-sec" autocomplete="off"></label>
       </div>
+      <datalist id="dl-loc">${knownLocations().map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+      <datalist id="dl-sec">${knownSectors(a.place).map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+      <label>Country<input name="country" value="${esc(a.country)}"></label>` : `
+      <div class="row2">
+        <label>Place<input name="place" value="${esc(a.place)}" placeholder="e.g. Glencoe"></label>
+        <label>Country<input name="country" value="${esc(a.country)}"></label>
+      </div>`}
+      <fieldset><legend>${isClimbing(a.kind) ? "Sector position" : "Position"}</legend>
+        <div class="row"><input type="search" id="pos-q" placeholder="Search a crag, village, summit…"><button class="btn small" data-possearch>Search</button></div>
+        <div id="pos-res" class="pos-res"></div>
+        <div class="map small" id="pos-map"></div>
+        <p class="hint" id="pos-note">${a.latitude != null ? `${(+a.latitude).toFixed(5)}, ${(+a.longitude).toFixed(5)} — tap the map to move it` : "Search, or tap the map to set the position"}</p>
+      </fieldset>
       ${crag ? `
         <fieldset><legend>Routes</legend>
           <div id="routes">${(a.routes || []).map(routeRow).join("")}</div>
@@ -339,6 +354,7 @@ function readForm() {
   const old = new Date(a.date);
   a.date = new Date(Date.UTC(y, mo - 1, d, old.getUTCHours() || 9, old.getUTCMinutes())).toISOString().replace(/\.\d+Z$/, "Z");
   a.kind = v("kind"); a.place = v("place").trim(); a.country = v("country").trim();
+  if (f.elements.sector) a.sector = v("sector").trim();
   a.partners = v("partners").trim(); a.notes = v("notes");
   if (f.elements.distanceKm) {
     const num = (s) => (s && s.trim() !== "" && !Number.isNaN(+s.replace(",", ".")) ? +s.replace(",", ".") : null);
@@ -374,6 +390,7 @@ function bindEditor(isNew) {
   s.querySelector("[data-rmgpx]")?.addEventListener("click", () => { readForm(); delete draft.gpxFile; renderEditor(isNew); });
   s.querySelector("#gpx-in")?.addEventListener("change", (e) => importGPX(e.target.files[0], isNew));
   s.querySelector("#ph-in").onchange = (e) => addPhotos([...e.target.files], isNew);
+  bindPosition(isNew);
   s.querySelectorAll(".grid.edit .ph").forEach((t) => {
     t.querySelector(".star").onclick = () => { readForm(); draft.coverPhoto = t.dataset.p; renderEditor(isNew); };
     t.querySelector(".x").onclick = () => {
@@ -383,6 +400,73 @@ function bindEditor(isNew) {
       renderEditor(isNew);
     };
   });
+}
+
+// ---- known crags and the position picker
+function knownLocations() {
+  return [...new Set(data.activities.filter((x) => isClimbing(x.kind) && x.place).map((x) => x.place))].sort();
+}
+function knownSectors(loc) {
+  const l = (loc || "").toLowerCase();
+  return [...new Set(data.activities.filter((x) => (x.place || "").toLowerCase() === l && x.sector).map((x) => x.sector))].sort();
+}
+function knownPosition(loc, sec, id) {
+  const l = (loc || "").trim().toLowerCase(), s = (sec || "").trim().toLowerCase();
+  if (!l) return null;
+  return data.activities.find((x) => x.id !== id && x.latitude != null && (x.place || "").toLowerCase() === l && (x.sector || "").toLowerCase() === s) || null;
+}
+
+let autoPositioned = false;
+function bindPosition(isNew) {
+  const el = $("#pos-map", sheet);
+  const m = makeMap(el);
+  let marker = null;
+  const note = $("#pos-note", sheet);
+  const setPos = (lat, lon, msg, zoom) => {
+    draft.latitude = +lat.toFixed(6); draft.longitude = +lon.toFixed(6);
+    if (marker) marker.setLatLng([lat, lon]);
+    else marker = L.marker([lat, lon], { draggable: true }).addTo(m).on("dragend", (e) => { const p = e.target.getLatLng(); setPos(p.lat, p.lng); autoPositioned = false; });
+    if (zoom) m.setView([lat, lon], zoom);
+    note.textContent = msg || `${draft.latitude.toFixed(5)}, ${draft.longitude.toFixed(5)} — tap the map or drag the pin to move it`;
+  };
+  if (draft.latitude != null) setPos(draft.latitude, draft.longitude, null, 14);
+  else m.setView([45.65, 13.78], 9);
+  m.on("click", (e) => { setPos(e.latlng.lat, e.latlng.lng); autoPositioned = false; });
+
+  const q = $("#pos-q", sheet), res = $("#pos-res", sheet);
+  const search = async () => {
+    const term = q.value.trim() || [draft.sector, draft.place, draft.country].filter(Boolean).join(", ");
+    if (!term) return;
+    q.value = term; res.innerHTML = `<p class="hint">Searching…</p>`;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&q=${encodeURIComponent(term)}`);
+      const items = await r.json();
+      res.innerHTML = items.length ? items.map((it, i) => `<button class="pos-item" data-i="${i}"><b>${esc(it.name || it.display_name.split(",")[0])}</b><small>${esc(it.display_name)}</small></button>`).join("") : `<p class="hint">Nothing found — try a nearby village, or tap the map.</p>`;
+      res.querySelectorAll(".pos-item").forEach((b) => (b.onclick = (ev) => {
+        ev.preventDefault(); const it = items[+b.dataset.i];
+        setPos(+it.lat, +it.lon, null, 15); res.innerHTML = ""; autoPositioned = false;
+      }));
+    } catch { res.innerHTML = `<p class="hint">Search isn't available right now — tap the map instead.</p>`; }
+  };
+  sheet.querySelector("[data-possearch]").onclick = (e) => { e.preventDefault(); search(); };
+  q.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); search(); } };
+
+  // known location + sector → reuse the position from earlier outings
+  const f = sheet.querySelector("form");
+  const auto = () => {
+    if (!isClimbing(f.elements.kind.value) || draft.gpxFile || (draft.latitude != null && !autoPositioned)) return;
+    const hit = knownPosition(f.elements.place.value, f.elements.sector?.value, draft.id);
+    if (!hit) return;
+    autoPositioned = true;
+    setPos(hit.latitude, hit.longitude, `Position filled in from your earlier outings at ${placeLine(hit)}`, 14);
+    if (!f.elements.country.value && hit.country) f.elements.country.value = hit.country;
+  };
+  f.elements.place.addEventListener("change", () => {
+    auto();
+    const dl = $("#dl-sec", sheet); if (dl) dl.innerHTML = knownSectors(f.elements.place.value).map((x) => `<option value="${esc(x)}">`).join("");
+  });
+  f.elements.sector?.addEventListener("change", auto);
+  setTimeout(() => m.invalidateSize(), 50);
 }
 
 async function importGPX(file, isNew) {
