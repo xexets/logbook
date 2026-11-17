@@ -8,7 +8,7 @@ export const KINDS = {
   mountaineering: { label: "Mountaineering", color: "#5b5bd6", icon: "🏔️" },
   winterMountaineering: { label: "Winter mountaineering", color: "#1aa3c9", icon: "❄️" },
   sportClimb: { label: "Sport climbing", color: "#e5484d", icon: "🧗" },
-  tradClimb: { label: "Trad climbing", color: "#d97706", icon: "🪢", noImg: true },
+  tradClimb: { label: "Trad climbing", color: "#d97706", icon: "🪢" },
   multipitch: { label: "Multipitch", color: "#e54d8f", icon: "⛰️" },
   alpineClimb: { label: "Alpine climb", color: "#9d4edd", icon: "🔺" },
   winterClimb: { label: "Winter climb", color: "#3b82f6", icon: "🧊" },
